@@ -21,8 +21,10 @@ type User struct {
 // HandleRequest runs the processes requested by users. Returns false
 // if process had to be killed
 func HandleRequest(process func(), u *User) bool {
+
 	process()
 	return true
+	// have we hit the timeout yet - false
 }
 
 func main() {

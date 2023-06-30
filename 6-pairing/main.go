@@ -13,38 +13,32 @@ import (
 func main() {
 	var wg sync.WaitGroup
 
-	var hi string
-
-	var results chan string
-
-	// mutually exclusively
-	var mutex sync.Mutex
+	// send to it or receive from it
+	results := make(chan string)
 
 	wg.Add(2) // starts two go routines
 
 	go func() {
-		mutex.Lock()           // the code between lock/unlock is the critical section. two go routines musnt be there at the same time.
-		fmt.Println("hi" + hi) // io so the go routine is parked
-		//mutex.Unlock()
 		for i := 1; i <= 10; i += 1 {
 			time.Sleep(100 * time.Millisecond)
-			fmt.Printf("%d goodbye\n", i)
+			// blocked on sending
+			results <- fmt.Sprintf("%d goodbye", i)
 		}
 
 		wg.Done()
 	}()
 	go func() {
-		// please may I modify the 'hi' variable?
-		mutex.Lock() // if someone has the mutex, it should park.
-		hi = "-hi"
-		//mutex.Unlock()
-		//fmt.Println("hi" + hi)
 		for i := 1; i <= 10; i += 1 {
 			time.Sleep(100 * time.Millisecond)
-			fmt.Printf("%d hello\n", i)
+			// sends info / blocked on sending.
+			results <- fmt.Sprintf("%d hello", i)
 		}
 		wg.Done()
 	}()
+
+	for result := range results {
+		fmt.Println(result)
+	}
 
 	wg.Wait() // it waits until counter reaches 0. wg.Done() decrements it
 }
